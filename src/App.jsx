@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Icons } from './components/Icons';
 import { ToastContainer, Modal } from './components/UI';
 import { MachineDataForm, TechnicalDrawingForm, AggregateRequestForm } from './components/Forms';
-import { NeuaufstellungPrintView } from './components/PrintViews'; // Importieren der Druckansicht
+import { NeuaufstellungPrintView, DrawingPrintView, RequestPrintView } from './components/PrintViews'; // Importieren der Druckansicht
 import './styles/index.css';
 
 export default function App() {
@@ -77,7 +77,7 @@ export default function App() {
         setView('editor');
     };
 
-    // Logik für die Druckansicht
+    // Logik für die Druckansicht in App.jsx
     if (view === 'print') {
         return (
             <div className="h-screen overflow-y-auto bg-slate-100 p-8 print:p-0">
@@ -89,8 +89,11 @@ export default function App() {
                         <Icons.Printer /> Drucken
                     </button>
                 </div>
-                {/* Hier wird die Druckansicht gerendert */}
-                <NeuaufstellungPrintView record={{ id: 'VORSCHAU', data: formData, createdAt: new Date().toISOString() }} />
+    
+                {/* Automatische Auswahl der richtigen Druck-Komponente */}
+                {formType === 'Neuaufstellung' && <NeuaufstellungPrintView record={{ id: 'VORSCHAU', data: formData, createdAt: new Date().toISOString() }} />}
+                {formType === 'Zeichnung' && <DrawingPrintView record={{ id: 'VORSCHAU', data: formData, createdAt: new Date().toISOString() }} />}
+                {formType === 'Anforderung' && <RequestPrintView record={{ id: 'VORSCHAU', data: formData, createdAt: new Date().toISOString() }} />}
             </div>
         );
     }
