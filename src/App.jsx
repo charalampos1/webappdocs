@@ -66,9 +66,19 @@ export default function App() {
 
             {/* Mobile Navigation - Unten fixiert */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-3 z-50">
-                <button onClick={() => setView('dashboard')} className="flex flex-col items-center gap-1 text-slate-500"><Icons.FileText /> <span className="text-[10px]">Dashboard</span></button>
-                <button onClick={() => startNew('Neuaufstellung')} className="flex flex-col items-center gap-1 text-slate-500"><Icons.Plus /> <span className="text-[10px]">Pumpe</span></button>
-                <button onClick={() => startNew('Zeichnung')} className="flex flex-col items-center gap-1 text-slate-500"><Icons.Ruler /> <span className="text-[10px]">Maße</span></button>
+                <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-brand-accent' : 'text-slate-500'}`}>
+                    <Icons.FileText /> <span className="text-[10px]">Dashboard</span>
+                </button>
+                <button onClick={() => startNew('Neuaufstellung')} className="flex flex-col items-center gap-1 text-slate-500">
+                    <Icons.Plus /> <span className="text-[10px]">Pumpe</span>
+                </button>
+                <button onClick={() => startNew('Zeichnung')} className="flex flex-col items-center gap-1 text-slate-500">
+                    <Icons.Ruler /> <span className="text-[10px]">Maße</span>
+                </button>
+                {/* Dieser Button hat gefehlt: */}
+                <button onClick={() => startNew('Anforderung')} className="flex flex-col items-center gap-1 text-slate-500">
+                    <Icons.ClipboardList /> <span className="text-[10px]">Anforderung</span>
+                </button>
             </nav>
 
             <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
