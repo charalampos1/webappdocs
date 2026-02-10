@@ -129,35 +129,25 @@ export const TechnicalDrawingForm = ({ data, onChange }) => {
     );
 };
 
+// Am Ende von src/components/Forms.jsx hinzufügen, falls noch nicht vorhanden:
+
 export const AggregateRequestForm = ({ data, onChange }) => {
     const handleFieldChange = (e) => onChange({ ...data, [e.target.name]: e.target.value });
-    const pumpClass = data.pumpClass || '1';
 
     return (
         <div className="animate-in pb-24">
-            <CollapsibleSection title="Pumpen-Klassifizierung">
-                <div className="mb-4">
-                    <label className="block text-xs font-bold text-slate-600 uppercase mb-2">Bitte Klasse wählen</label>
-                    <select name="pumpClass" value={pumpClass} onChange={handleFieldChange} 
-                        className="w-full p-2.5 bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-100 appearance-none">
-                        {Object.entries(PUMP_CLASSES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                    </select>
+            <CollapsibleSection title="Projektdaten">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InputField label="Projektname" name="project" value={data.project} onChange={handleFieldChange} />
+                    <InputField label="Anforderer" name="requester" value={data.requester} onChange={handleFieldChange} />
+                    <InputField label="Datum" name="date" type="date" value={data.date} onChange={handleFieldChange} />
                 </div>
             </CollapsibleSection>
-            
             <CollapsibleSection title="Betriebsdaten">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <InputField label="Medium" name="medium" value={data.medium} onChange={handleFieldChange} />
-                    <InputField label="Förderstrom" name="flow" value={data.flow} onChange={handleFieldChange} />
-                    <InputField label="Förderhöhe" name="head" value={data.head} onChange={handleFieldChange} />
-                </div>
-            </CollapsibleSection>
-
-            <CollapsibleSection title="Spezifische Daten">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {PUMP_CLASSES[pumpClass].fields.map(field => (
-                        <InputField key={field} label={field.replace(/([A-Z])/g, ' $1').trim()} name={field} value={data[field]} onChange={handleFieldChange} />
-                    ))}
+                    <InputField label="Förderstrom (m³/h)" name="flow" value={data.flow} onChange={handleFieldChange} />
+                    <InputField label="Förderhöhe (m)" name="head" value={data.head} onChange={handleFieldChange} />
                 </div>
             </CollapsibleSection>
         </div>
