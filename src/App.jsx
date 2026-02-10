@@ -1,7 +1,9 @@
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import { Icons } from './components/Icons';
 import { ToastContainer, Modal } from './components/UI';
 import { MachineDataForm, TechnicalDrawingForm, AggregateRequestForm } from './components/Forms';
+import { NeuaufstellungPrintView } from './components/PrintViews'; // Importieren der Druckansicht
 import './styles/index.css';
 
 export default function App() {
@@ -42,7 +44,7 @@ export default function App() {
     };
 
     const handleDelete = (id, e) => {
-        e.stopPropagation(); // Verhindert das Öffnen des Editors
+        e.stopPropagation();
         setModalConfig({
             isOpen: true,
             title: "Datensatz löschen?",
@@ -75,12 +77,29 @@ export default function App() {
         setView('editor');
     };
 
+    // Logik für die Druckansicht
+    if (view === 'print') {
+        return (
+            <div className="h-screen overflow-y-auto bg-slate-100 p-8 print:p-0">
+                <div className="max-w-[210mm] mx-auto mb-4 flex justify-between no-print">
+                    <button onClick={() => setView('editor')} className="px-4 py-2 bg-white rounded shadow font-bold flex items-center gap-2">
+                        <Icons.ArrowLeft /> Zurück
+                    </button>
+                    <button onClick={() => window.print()} className="px-6 py-2 bg-brand-accent text-white rounded shadow font-bold flex items-center gap-2">
+                        <Icons.Printer /> Drucken
+                    </button>
+                </div>
+                {/* Hier wird die Druckansicht gerendert */}
+                <NeuaufstellungPrintView record={{ id: 'VORSCHAU', data: formData, createdAt: new Date().toISOString() }} />
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col md:flex-row h-screen bg-brand-light overflow-hidden">
             <ToastContainer toasts={toasts} removeToast={(id) => setToasts(p => p.filter(t => t.id !== id))} />
             <Modal {...modalConfig} />
             
-            {/* Sidebar - Desktop (Jetzt mit allen 3 Formularen) */}
             <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col p-6">
                 <div className="flex items-center gap-3 mb-8">
                     <div className="bg-brand-accent text-white p-2 rounded-lg"><Icons.Database /></div>
@@ -95,7 +114,6 @@ export default function App() {
                 </nav>
             </aside>
 
-            {/* Mobile Navigation - Unten fixiert (Alle 4 Tabs) */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-3 z-50">
                 <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-brand-accent' : 'text-slate-500'}`}><Icons.FileText /> <span className="text-[10px]">Dashboard</span></button>
                 <button onClick={() => startNew('Neuaufstellung')} className="flex flex-col items-center gap-1 text-slate-500"><Icons.Plus /> <span className="text-[10px]">Pumpe</span></button>
@@ -131,7 +149,6 @@ export default function App() {
                                         className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-brand-accent transition-all relative group">
                                         <div className="flex justify-between items-start mb-4">
                                             <span className="text-[9px] font-bold uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{record.type}</span>
-                                            {/* Aktions-Buttons: Auf Mobile immer sichtbar, auf Desktop bei Hover */}
                                             <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                 <button onClick={(e) => handleDuplicate(record, e)} className="p-1.5 text-slate-400 hover:text-brand-accent bg-slate-50 rounded-md"><Icons.Copy size={16}/></button>
                                                 <button onClick={(e) => handleDelete(record.id, e)} className="p-1.5 text-slate-400 hover:text-red-500 bg-slate-50 rounded-md"><Icons.Trash size={16}/></button>
@@ -147,7 +164,15 @@ export default function App() {
                         <div className="max-w-4xl mx-auto">
                             <div className="flex justify-between items-center mb-6">
                                 <button onClick={() => setView('dashboard')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"><Icons.ArrowLeft /> Zurück</button>
-                                <button onClick={handleSave} className="bg-brand-accent text-white px-5 py-2 rounded-lg font-bold shadow-lg text-sm">Speichern</button>
+                                <div className="flex gap-3">
+                                    {/* NEU: Vorschau-Button für den Druck */}
+                                    <button onClick={() => setView('print')} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors flex items-center gap-2">
+                                        <Icons.Printer /> Vorschau
+                                    </button>
+                                    <button onClick={handleSave} className="bg-brand-accent text-white px-5 py-2 rounded-lg font-bold shadow-lg text-sm flex items-center gap-2">
+                                        <Icons.Save /> Speichern
+                                    </button>
+                                </div>
                             </div>
                             {formType === 'Neuaufstellung' && <MachineDataForm data={formData} onChange={setFormData} />}
                             {formType === 'Zeichnung' && <TechnicalDrawingForm data={formData} onChange={setFormData} />}
