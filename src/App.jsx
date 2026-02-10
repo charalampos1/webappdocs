@@ -11,15 +11,16 @@ export default function App() {
     const [formType, setFormType] = useState(null);
     const [toasts, setToasts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [modalConfig, setModalConfig] = useState({ isOpen: false });
 
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem('machine_db_v3') || '[]');
         setRecords(saved);
     }, []);
 
-    const addToast = (message) => {
+    const addToast = (message, type = 'success') => {
         const id = Date.now();
-        setToasts(prev => [...prev, { id, message }]);
+        setToasts(prev => [...prev, { id, message, type }]);
         setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3000);
     };
 
@@ -40,6 +41,34 @@ export default function App() {
         setView('dashboard');
     };
 
+    const handleDelete = (id, e) => {
+        e.stopPropagation(); // Verhindert das Öffnen des Editors
+        setModalConfig({
+            isOpen: true,
+            title: "Datensatz löschen?",
+            message: "Möchten Sie diesen Eintrag wirklich unwiderruflich löschen?",
+            confirmText: "Löschen",
+            type: "danger",
+            onConfirm: () => {
+                const newRecords = records.filter(r => r.id !== id);
+                setRecords(newRecords);
+                localStorage.setItem('machine_db_v3', JSON.stringify(newRecords));
+                setModalConfig({ isOpen: false });
+                addToast('Gelöscht', 'success');
+            },
+            onCancel: () => setModalConfig({ isOpen: false })
+        });
+    };
+
+    const handleDuplicate = (record, e) => {
+        e.stopPropagation();
+        const copy = { ...record.data, id: null };
+        setFormData(copy);
+        setFormType(record.type);
+        setView('editor');
+        addToast('Kopie erstellt');
+    };
+
     const startNew = (type) => {
         setFormType(type);
         setFormData({});
@@ -49,36 +78,29 @@ export default function App() {
     return (
         <div className="flex flex-col md:flex-row h-screen bg-brand-light overflow-hidden">
             <ToastContainer toasts={toasts} removeToast={(id) => setToasts(p => p.filter(t => t.id !== id))} />
+            <Modal {...modalConfig} />
             
-            {/* Sidebar - Nur Desktop */}
+            {/* Sidebar - Desktop (Jetzt mit allen 3 Formularen) */}
             <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col p-6">
                 <div className="flex items-center gap-3 mb-8">
                     <div className="bg-brand-accent text-white p-2 rounded-lg"><Icons.Database /></div>
                     <span className="font-bold text-lg">Manager</span>
                 </div>
                 <nav className="space-y-2">
-                    <button onClick={() => setView('dashboard')} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg ${view === 'dashboard' ? 'bg-blue-50 text-brand-accent' : ''}`}><Icons.FileText /> Dashboard</button>
+                    <button onClick={() => setView('dashboard')} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg ${view === 'dashboard' ? 'bg-blue-50 text-brand-accent font-bold' : 'hover:bg-slate-50'}`}><Icons.FileText /> Dashboard</button>
                     <div className="pt-4 pb-2 text-xs font-bold text-slate-400 uppercase">Erstellen</div>
                     <button onClick={() => startNew('Neuaufstellung')} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50"><Icons.Plus /> Neuaufstellung</button>
                     <button onClick={() => startNew('Zeichnung')} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50"><Icons.Ruler /> Maßblatt</button>
+                    <button onClick={() => startNew('Anforderung')} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50"><Icons.ClipboardList /> Anforderung</button>
                 </nav>
             </aside>
 
-            {/* Mobile Navigation - Unten fixiert */}
+            {/* Mobile Navigation - Unten fixiert (Alle 4 Tabs) */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-3 z-50">
-                <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-brand-accent' : 'text-slate-500'}`}>
-                    <Icons.FileText /> <span className="text-[10px]">Dashboard</span>
-                </button>
-                <button onClick={() => startNew('Neuaufstellung')} className="flex flex-col items-center gap-1 text-slate-500">
-                    <Icons.Plus /> <span className="text-[10px]">Pumpe</span>
-                </button>
-                <button onClick={() => startNew('Zeichnung')} className="flex flex-col items-center gap-1 text-slate-500">
-                    <Icons.Ruler /> <span className="text-[10px]">Maße</span>
-                </button>
-                {/* Dieser Button hat gefehlt: */}
-                <button onClick={() => startNew('Anforderung')} className="flex flex-col items-center gap-1 text-slate-500">
-                    <Icons.ClipboardList /> <span className="text-[10px]">Anforderung</span>
-                </button>
+                <button onClick={() => setView('dashboard')} className={`flex flex-col items-center gap-1 ${view === 'dashboard' ? 'text-brand-accent' : 'text-slate-500'}`}><Icons.FileText /> <span className="text-[10px]">Dashboard</span></button>
+                <button onClick={() => startNew('Neuaufstellung')} className="flex flex-col items-center gap-1 text-slate-500"><Icons.Plus /> <span className="text-[10px]">Pumpe</span></button>
+                <button onClick={() => startNew('Zeichnung')} className="flex flex-col items-center gap-1 text-slate-500"><Icons.Ruler /> <span className="text-[10px]">Maße</span></button>
+                <button onClick={() => startNew('Anforderung')} className="flex flex-col items-center gap-1 text-slate-500"><Icons.ClipboardList /> <span className="text-[10px]">Anforderung</span></button>
             </nav>
 
             <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
@@ -98,17 +120,24 @@ export default function App() {
                     {view === 'dashboard' ? (
                         records.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
-                                <div className="p-6 bg-slate-100 rounded-full mb-4"><Icons.FileText size={48} className="text-slate-400" /></div>
+                                <Icons.FileText size={48} className="text-slate-400 mb-4" />
                                 <h3 className="text-xl font-bold mb-2">Keine Dokumente</h3>
-                                <p className="text-sm text-slate-500 max-w-xs">Tippe unten auf das Plus-Symbol, um dein erstes Formular zu erstellen.</p>
+                                <p className="text-sm text-slate-500">Erstellen Sie ein neues Dokument über das Menü.</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                                 {records.filter(r => JSON.stringify(r).toLowerCase().includes(searchTerm.toLowerCase())).map(record => (
                                     <div key={record.id} onClick={() => { setFormData(record.data); setFormType(record.type); setView('editor'); }}
-                                        className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm active:scale-95 transition-all">
-                                        <span className="text-[9px] font-bold uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{record.type}</span>
-                                        <h3 className="font-bold mt-2 text-slate-800">{record.data.nummer_pumpe || record.data.drawingTitle || 'Unbenannt'}</h3>
+                                        className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-brand-accent transition-all relative group">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <span className="text-[9px] font-bold uppercase bg-blue-100 text-blue-700 px-2 py-0.5 rounded">{record.type}</span>
+                                            {/* Aktions-Buttons: Auf Mobile immer sichtbar, auf Desktop bei Hover */}
+                                            <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                <button onClick={(e) => handleDuplicate(record, e)} className="p-1.5 text-slate-400 hover:text-brand-accent bg-slate-50 rounded-md"><Icons.Copy size={16}/></button>
+                                                <button onClick={(e) => handleDelete(record.id, e)} className="p-1.5 text-slate-400 hover:text-red-500 bg-slate-50 rounded-md"><Icons.Trash size={16}/></button>
+                                            </div>
+                                        </div>
+                                        <h3 className="font-bold text-slate-800 truncate">{record.data.nummer_pumpe || record.data.drawingTitle || record.data.project || 'Unbenannt'}</h3>
                                         <p className="text-[10px] text-slate-400 mt-4">{new Date(record.createdAt).toLocaleDateString()}</p>
                                     </div>
                                 ))}
@@ -117,10 +146,12 @@ export default function App() {
                     ) : (
                         <div className="max-w-4xl mx-auto">
                             <div className="flex justify-between items-center mb-6">
-                                <button onClick={() => setView('dashboard')} className="flex items-center gap-1 text-sm text-slate-500"><Icons.ArrowLeft /> Zurück</button>
+                                <button onClick={() => setView('dashboard')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"><Icons.ArrowLeft /> Zurück</button>
                                 <button onClick={handleSave} className="bg-brand-accent text-white px-5 py-2 rounded-lg font-bold shadow-lg text-sm">Speichern</button>
                             </div>
-                            {formType === 'Neuaufstellung' ? <MachineDataForm data={formData} onChange={setFormData} /> : <TechnicalDrawingForm data={formData} onChange={setFormData} />}
+                            {formType === 'Neuaufstellung' && <MachineDataForm data={formData} onChange={setFormData} />}
+                            {formType === 'Zeichnung' && <TechnicalDrawingForm data={formData} onChange={setFormData} />}
+                            {formType === 'Anforderung' && <AggregateRequestForm data={formData} onChange={setFormData} />}
                         </div>
                     )}
                 </div>
