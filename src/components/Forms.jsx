@@ -110,7 +110,7 @@ export const TechnicalDrawingForm = ({ data, onChange }) => {
                     <img 
                         src="/zeichnung_aufstellung.svg" 
                         alt="Technische Zeichnung" 
-                        className="max-h-[400px] w-auto object-contain"
+                        className="max-h-[400px] w-auto object-contain transform rotate-90"
                         onError={(e) => { e.target.style.display = 'none'; console.error("Bilddatei nicht gefunden"); }}
                     />
                 </div>
